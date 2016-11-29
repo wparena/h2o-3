@@ -11,7 +11,9 @@ public:
     std::string label;
     std::vector<double> classProbabilities;
 
-    BinomialModelPrediction();
+    BinomialModelPrediction() {
+        classProbabilities.resize(2);
+    }
 };
 
 }

@@ -1,8 +1,7 @@
-#include "h2o/GenModel.h"
-#include <cstdio>
+#include "h2o/mojo.h"
 
 int main(int argc, char **argv) {
-    h2o::EasyPredictModelWrapper model(h2o::MojoModel::load("GBM_model_R_1475248925871_74.zip"));
+    h2o::EasyPredictModelWrapper model(h2o::loadMojoModel("GBM_model_R_1475248925871_74.zip"));
 
     h2o::RowData row;
     row.put("AGE", "68");
