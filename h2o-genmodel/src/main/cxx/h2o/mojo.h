@@ -3,7 +3,6 @@
 
 #include "h2o/MojoModel.h"
 #include "h2o/FolderMojoReaderBackend.h"
-#include "h2o/ModelMojoReader.h"
 #include "h2o/ModelMojoFactory.h"
 #include "h2o/EasyPredictModelWrapper.h"
 #include <string>
