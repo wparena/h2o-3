@@ -1,5 +1,6 @@
 package hex.tree.gbm;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import hex.genmodel.utils.DistributionFamily;
 import hex.Distribution;
 import hex.ModelCategory;
@@ -571,6 +572,7 @@ public class GBM extends SharedTree<GBMModel,GBMModel.GBMParameters,GBMModel.GBM
         if (tree == null) continue;
         int leaf = tree.len();
         leaves[k] = leaf; //record the size of the tree before splitting the bottom nodes as the starting index for the leaf node indices
+        double s=0;
         for (int nid = 0; nid < leaf; nid++) {
           if (tree.node(nid) instanceof DecidedNode) {
             DecidedNode dn = tree.decided(nid);
@@ -584,8 +586,11 @@ public class GBM extends SharedTree<GBMModel,GBMModel.GBMParameters,GBMModel.GBM
               if (cnid == ScoreBuildHistogram.UNDECIDED_CHILD_NODE_ID ||    // Bottomed out (predictors or responses known constant)
                       tree.node(cnid) instanceof UndecidedNode || // Or chopped off for depth
                       (tree.node(cnid) instanceof DecidedNode &&  // Or not possible to split
-                              ((DecidedNode) tree.node(cnid))._split == null))
+                              ((DecidedNode) tree.node(cnid))._split == null)) {
                 dn._nids[i] = new LeafNode(tree, nid).nid(); // Mark a leaf here
+                s += (i == 0 ? dn._split._n0 : dn._split._n1);
+                Log.info(dn._nids[i] + " " + s);
+              }
             }
           }
         }
@@ -873,8 +878,8 @@ public class GBM extends SharedTree<GBMModel,GBMModel.GBMParameters,GBMModel.GBM
             final boolean wasOOBRow = ScoreBuildHistogram.isOOBRow(nid); //same for all k
             if (wasOOBRow) nid = ScoreBuildHistogram.oob2Nid(nid);
             if (nid < 0) continue;
-            if( tree.node(nid) instanceof UndecidedNode ) // If we bottomed out the tree
-              nid = tree.node(nid).pid();                  // Then take parent's decision
+//            if( tree.node(nid) instanceof UndecidedNode ) // If we bottomed out the tree
+//              nid = tree.node(nid).pid();                  // Then take parent's decision
             DecidedNode dn = tree.decided(nid);           // Must have a decision point
             if( dn._split == null )                    // Unable to decide?
               dn = tree.decided(dn.pid());  // Then take parent's decision
