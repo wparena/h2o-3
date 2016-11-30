@@ -6,6 +6,15 @@
 
 namespace h2o {
 
+inline char separator()
+{
+#ifdef _WIN32
+    return '\\';
+#else
+    return '/';
+#endif
+}
+
 class FolderMojoReaderBackend : public MojoReaderBackend {
 private:
     std::string root;
@@ -16,7 +25,8 @@ public:
     }
 
     virtual BufferedReader getTextFile(const std::string &filename) {
-        assert(0);
+        BufferedReader br(root + separator() + filename);
+        return br;
     }
 
     virtual std::vector<uint8_t> getBinaryFile(const std::string &filename) {
