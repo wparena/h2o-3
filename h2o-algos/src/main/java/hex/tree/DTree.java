@@ -631,6 +631,7 @@ public class DTree extends Iced {
       res++; //1 byte for NA split dir
       if (_split._nasplit == DHistogram.NASplitDir.NAvsREST)
         res -= _split._equal == 3 ? 4 + _split._bs.numBytes() : 4; //don't need certain stuff
+      res+=4+4; //L/R weights
 
       Node left = _tree.node(_nids[0]);
       int lsz = left.size();
@@ -666,6 +667,8 @@ public class DTree extends Iced {
         else if(_split._equal == 2) _split._bs.compress2(ab);
         else _split._bs.compress3(ab);
       }
+      ab.put4f((float)(_split._n0));
+      ab.put4f((float)(_split._n1));
 
       Node left = _tree.node(_nids[0]);
       if( (_nodeType&48) == 0 ) { // Size bits are optional for left leaves !
@@ -696,7 +699,9 @@ public class DTree extends Iced {
     }
     // Insert just the predictions: a single byte/short if we are predicting a
     // single class, or else the full distribution.
-    @Override protected AutoBuffer compress(AutoBuffer ab) { assert !Double.isNaN(_pred); return ab.put4f(_pred); }
+    @Override protected AutoBuffer compress(AutoBuffer ab) {
+      assert !Double.isNaN(_pred); return ab.put4f(_pred);
+    }
     @Override protected int size() { return 4; }
     public final double pred() { return _pred; }
   }

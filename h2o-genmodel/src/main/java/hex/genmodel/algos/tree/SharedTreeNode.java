@@ -14,6 +14,8 @@ class SharedTreeNode {
   private final SharedTreeNode parent;
   private final int subgraphNumber;
   private final int nodeNumber;
+  private float weightL;
+  private float weightR;
   private final int depth;
   private int colId;
   private String colName;
@@ -40,11 +42,14 @@ class SharedTreeNode {
    * @param n Node number
    * @param d Node depth within the tree
    */
-  SharedTreeNode(SharedTreeNode p, int sn, int n, int d) {
+  SharedTreeNode(SharedTreeNode p, int sn, int n, int d, float wL, float wR) {
     parent = p;
     subgraphNumber = sn;
     nodeNumber = n;
     depth = d;
+    weightL = wL;
+    weightR = wR;
+    System.out.println("Initialized weights to " + wL + " " + wR);
   }
 
   public int getDepth() {
@@ -53,6 +58,20 @@ class SharedTreeNode {
 
   private int getNodeNumber() {
     return nodeNumber;
+  }
+
+  float getNodeWeightL() {
+    return weightL;
+  }
+
+  float getNodeWeightR() {
+    return weightR;
+  }
+
+  void setWeight(float wL, float wR) {
+    weightL = wL;
+    weightR = wR;
+    System.out.println("Setting weights to " + wL + " " + wR);
   }
 
   void setCol(int v1, String v2) {
@@ -219,6 +238,7 @@ class SharedTreeNode {
 
   public void print() {
     System.out.println("        Node " + nodeNumber);
+    System.out.println("            weight(L/R):       " + weightL + " / " + weightR);
     System.out.println("            depth:       " + depth);
     System.out.println("            colId:       " + colId);
     System.out.println("            colName:     " + ((colName != null) ? colName : ""));
@@ -274,6 +294,12 @@ class SharedTreeNode {
 
     if (detail) {
       os.print("\\n\\nN" + getNodeNumber());
+      if (getNodeWeightL()==0)
+        os.print("\\n\\nW: " + getNodeWeightR());
+      else if (getNodeWeightR()==0)
+        os.print("\\n\\nW: " + getNodeWeightL());
+      else
+        os.print("\\n\\nW: " + (getNodeWeightL() + getNodeWeightR()));
       if (naVsRest) {
         os.print("\\n" + "nasVsRest");
       }

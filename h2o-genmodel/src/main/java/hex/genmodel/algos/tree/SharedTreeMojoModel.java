@@ -79,6 +79,8 @@ public abstract class SharedTreeMojoModel extends MojoModel {
                         bs.fill3(tree, ab);
                 }
             }
+            float weightL = ab.get4f();
+            float weightR = ab.get4f();
 
             double d = row[colId];
             if (Double.isNaN(d)? !leftward : !naVsRest && (equal == 0? d >= splitVal : bs.contains((int)d))) {
@@ -141,7 +143,6 @@ public abstract class SharedTreeMojoModel extends MojoModel {
             node.setLeafValue(leafValue);
             return;
         }
-
         String colName = getNames()[colId];
         node.setCol(colId, colName);
 
@@ -210,6 +211,10 @@ public abstract class SharedTreeMojoModel extends MojoModel {
         //                }
         //            }
         //        }
+
+        float weightL = ab.get4f();
+        float weightR = ab.get4f();
+        node.setWeight(weightL,weightR);
 
         // go RIGHT
         {
