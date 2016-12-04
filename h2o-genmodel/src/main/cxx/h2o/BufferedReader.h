@@ -9,11 +9,13 @@ namespace h2o {
 
 class BufferedReader {
 private:
-    int nextLineToRead = 0;
+    int nextLineToRead;
     std::vector<std::string> lines;
 
 public:
-    BufferedReader(const std::string &filename) {
+    BufferedReader(const std::string &filename) :
+        nextLineToRead(0)
+    {
         std::ifstream infile(filename);
         std::string line;
         while (std::getline(infile, line)) {

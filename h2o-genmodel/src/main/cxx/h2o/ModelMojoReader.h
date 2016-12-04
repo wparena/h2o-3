@@ -46,7 +46,7 @@ inline std::string trim(const std::string& str) {
 
 class ModelMojoReader {
 private:
-    static MojoModel *readAll(MojoReaderBackend &reader, MojoModelInfo &info) {
+    MojoModel *readAll(MojoReaderBackend &reader, MojoModelInfo &info) {
         assert(0);
         return NULL;
     }
@@ -56,7 +56,7 @@ public:
         MojoModelInfo info = parseModelInfo(reader);
         std::string algo = info.properties["algorithm"];
         ModelMojoReader mmr = getMojoReader(algo);
-        MojoModel *model = readAll(reader, info);
+        MojoModel *model = mmr.readAll(reader, info);
         return model;
     }
 
