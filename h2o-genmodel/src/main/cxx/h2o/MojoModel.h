@@ -1,6 +1,7 @@
 #ifndef H2O_MOJOMODEL_H
 #define H2O_MOJOMODEL_H 1
 
+#include "h2o/util.h"
 #include "h2o/GenModel.h"
 #include "h2o/MojoReaderBackend.h"
 
@@ -172,6 +173,16 @@ private:
 protected:
     void readCommon(MojoReaderBackend &be) {
         parseModelInfo(be);
+    }
+
+    int safeGetIntProperty(const std::string &name) {
+        if (! mapContains(_info.properties, name)) {
+            throw std::invalid_argument("Property does not exist: " + name);
+        }
+
+        std::string stringValue = _info.properties[name];
+        int value = std::stoi(stringValue);
+        return value;
     }
 
 public:

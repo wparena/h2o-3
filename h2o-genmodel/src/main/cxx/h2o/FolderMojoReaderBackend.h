@@ -1,7 +1,9 @@
 #ifndef H2O_FOLDERMOJOREADERBACKEND_H
 #define H2O_FOLDERMOJOREADERBACKEND_H 1
 
+#include "h2o/util.h"
 #include "h2o/MojoReaderBackend.h"
+
 #include <cassert>
 
 namespace h2o {
@@ -29,8 +31,33 @@ public:
         return br;
     }
 
-    virtual std::vector<uint8_t> getBinaryFile(const std::string &filename) {
-        assert(0);
+    virtual void getBinaryFile(const std::string &filename, VectorOfBytes &v) {
+        std::string path = root + separator() + filename;
+        if (! fileExists(path.c_str())) {
+            throw std::invalid_argument("getBinaryFile: file does not exist: " + path);
+        }
+        off_t numBytes = fileSize(path.c_str());
+        v.resize(numBytes);
+        FILE *f = fopen(path.c_str(), "rb");
+        if (! f) {
+            int tmp = errno;
+            throw std::invalid_argument("getBinaryFile: fopen failed: " + filename + ": " + strerrorString(tmp));
+        }
+        size_t n = fread(v.data(), v.size(), 1, f);
+        if (n != 1) {
+            int rv = fclose(f);
+            if (rv) {
+                int tmp = errno;
+                throw std::invalid_argument("getBinaryFile: fclose failed: " + filename + ": " + strerrorString(tmp));
+            }
+
+            throw std::invalid_argument("getBinaryFile: fread failed to return 1 element: " + filename);
+        }
+        int rv = fclose(f);
+        if (rv) {
+            int tmp = errno;
+            throw std::invalid_argument("getBinaryFile: fclose failed: " + filename + ": " + strerrorString(tmp));
+        }
     }
 };
 
