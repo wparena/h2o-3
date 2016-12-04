@@ -1,6 +1,6 @@
 
 build:
-	g++ -I. *.cxx
+	g++ -Wall -Werror -I. *.cxx
 
 clean:
 	rm -f a.out
