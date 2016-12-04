@@ -41,7 +41,6 @@ MojoModel *loadMojoModel(const std::string &filename) {
     FolderMojoReaderBackend reader(filename);
 
     // Determine what kind of model we have.
-    MojoModel *model = NULL;
     BufferedReader br = reader.getTextFile("model.ini");
     std::string algo;
     while (true) {
@@ -59,6 +58,7 @@ MojoModel *loadMojoModel(const std::string &filename) {
     }
 
     // Create a model object.
+    MojoModel *model = NULL;
     if (algo == "Gradient Boosting Machine") {
         model = new GbmMojoModel();
     }
