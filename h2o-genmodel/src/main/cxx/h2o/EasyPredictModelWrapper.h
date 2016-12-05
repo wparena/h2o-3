@@ -17,8 +17,9 @@ private:
     EasyPredictModelWrapper(const EasyPredictModelWrapper &rhs);
 
 public:
-    EasyPredictModelWrapper(GenModel *model) : _model(model) {
-    }
+    EasyPredictModelWrapper(GenModel *model) :
+        _model(model)
+    {}
 
     ~EasyPredictModelWrapper() {
         if (_model != NULL) {

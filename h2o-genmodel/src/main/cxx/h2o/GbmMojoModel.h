@@ -22,7 +22,7 @@ private:
 public:
     GbmMojoModel() :
         _family(NULL)
-        {}
+    {}
 
     virtual ~GbmMojoModel() {
         if (_family != NULL) {
