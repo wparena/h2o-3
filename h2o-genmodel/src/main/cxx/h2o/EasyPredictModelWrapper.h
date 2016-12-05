@@ -10,8 +10,11 @@ namespace h2o {
 class GenModel;
 
 class EasyPredictModelWrapper {
-public:
+private:
     GenModel *_model;
+
+    // Disable copy constructor for now since _model is a pointer.
+    EasyPredictModelWrapper(const EasyPredictModelWrapper &rhs);
 
 public:
     EasyPredictModelWrapper(GenModel *model) : _model(model) {
