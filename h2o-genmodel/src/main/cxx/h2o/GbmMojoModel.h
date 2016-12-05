@@ -2,6 +2,7 @@
 #define H2O_GBMMOJOMODEL_H 1
 
 #include "h2o/SharedTreeMojoModel.h"
+#include "h2o/DistributionFamily.h"
 #include "h2o/MojoReaderBackend.h"
 
 #include <cassert>
@@ -9,16 +10,31 @@
 namespace h2o {
 
 class GbmMojoModel : public SharedTreeMojoModel {
+public:
+
 private:
+    DistributionFamily *_family;
+    double _init_f;
+
+    // Disable copy constructor for now since _family is a pointer.
+    GbmMojoModel (const GbmMojoModel &rhs);
 
 public:
+    GbmMojoModel() :
+        _family(NULL)
+        {}
+
+    virtual ~GbmMojoModel() {
+        if (_family != NULL) {
+            delete _family;
+        }
+    }
+
     virtual void read(MojoReaderBackend &be) {
         SharedTreeMojoModel::readTreeCommon(be);
-
-        // _family = DistributionFamily.valueOf((String)readkv("distribution"));
-        // _init_f = readkv("init_f");
-
-        assert(0);
+        std::string familyName = safeGetStringProperty("distribution");
+        _family = DistributionFamily::valueOf(familyName);
+        _init_f = safeGetDoubleProperty("init_f");
     }
 };
 

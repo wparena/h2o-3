@@ -170,23 +170,39 @@ private:
         }
     }
 
+    void safeCheckPropertyExists(const std::string &name) {
+        if (! mapContains(_info.properties, name)) {
+            throw std::invalid_argument("Property does not exist: " + name);
+        }
+    }
+
 protected:
     void readCommon(MojoReaderBackend &be) {
         parseModelInfo(be);
     }
 
     int safeGetIntProperty(const std::string &name) {
-        if (! mapContains(_info.properties, name)) {
-            throw std::invalid_argument("Property does not exist: " + name);
-        }
-
+        safeCheckPropertyExists(name);
         std::string stringValue = _info.properties[name];
         int value = std::stoi(stringValue);
         return value;
     }
 
+    double safeGetDoubleProperty(const std::string &name) {
+        safeCheckPropertyExists(name);
+        std::string stringValue = _info.properties[name];
+        double value = std::stod(stringValue);
+        return value;
+    }
+
+    std::string safeGetStringProperty(const std::string &name) {
+        safeCheckPropertyExists(name);
+        return _info.properties[name];
+    }
+
 public:
     virtual void read(MojoReaderBackend &be) = 0;
+    virtual ~MojoModel() {}
 };
 
 }

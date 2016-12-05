@@ -19,6 +19,8 @@ public:
     //    :
     //    _offsetColumnIdx(-1)
     {}
+
+    virtual ~GenModel() {}
 };
 
 }
