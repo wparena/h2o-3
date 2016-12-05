@@ -26,7 +26,7 @@ public:
 
     virtual ~GbmMojoModel() {
         if (_family != NULL) {
-            delete _family;
+            delete _family;  _family = NULL;
         }
     }
 

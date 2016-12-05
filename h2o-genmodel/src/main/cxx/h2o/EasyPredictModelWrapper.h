@@ -18,8 +18,9 @@ public:
     }
 
     ~EasyPredictModelWrapper() {
-        delete _model;
-        _model = NULL;
+        if (_model != NULL) {
+            delete _model;  _model = NULL;
+        }
     }
 
     BinomialModelPrediction predictBinomial(const RowData &row) const {
