@@ -8,11 +8,17 @@ include_directories(.)
 set(SOURCE_FILES
         h2o/BinomialModelPrediction.h
         h2o/BufferedReader.h
+        h2o/DistributionFamily.h
         h2o/EasyPredictModelWrapper.h
+        h2o/FolderMojoReaderBackend.h
+        h2o/GbmMojoModel.h
         h2o/GenModel.h
         h2o/MojoModel.h
         h2o/MojoReaderBackend.h
         h2o/RowData.h
+        h2o/SharedTreeMojoModel.h
+        h2o/mojo.h
+        h2o/util.h
 
         example.cxx
         )
