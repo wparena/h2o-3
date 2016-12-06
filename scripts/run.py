@@ -2603,8 +2603,8 @@ def main(argv):
         g_runner.run_tests(g_nopass)
     finally:
         g_runner.check_clouds()
-        g_runner.stop_clouds()
         g_runner.report_summary(g_nopass)
+        g_runner.stop_clouds()
 
     # If the overall regression did not pass then exit with a failure status code.
     if not g_runner.get_regression_passed():
