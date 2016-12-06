@@ -36,6 +36,14 @@ public:
         _family = DistributionFamily::valueOf(familyName);
         _init_f = safeGetDoubleProperty("init_f");
     }
+
+//    virtual void score0(std::vector<double> &row, std::vector<double> &preds) {
+//        assert(0);
+//    }
+
+    virtual void score0(double *row, double *preds) {
+        assert(0);
+    }
 };
 
 }

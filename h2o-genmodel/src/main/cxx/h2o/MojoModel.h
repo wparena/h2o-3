@@ -59,17 +59,15 @@ class MojoModel : public GenModel {
 private:
     MojoModelInfo _info;
 
-    /*
-    ModelCategory _category;
-    std::string _uuid;
-    bool _supervised;
+//    ModelCategory _category;
+//    std::string _uuid;
+//    bool _supervised;
     int _nfeatures;
     int _nclasses;
-    bool _balanceClasses;
-    double _defaultThreshold;
-    std::vector<double> _priorClassDistrib;
-    std::vector<double> _modelClassDistrib;
-     */
+//    bool _balanceClasses;
+//    double _defaultThreshold;
+//    std::vector<double> _priorClassDistrib;
+//    std::vector<double> _modelClassDistrib;
 
     void parseModelInfo(MojoReaderBackend &be) {
         BufferedReader br = be.getTextFile("model.ini");
@@ -179,6 +177,8 @@ private:
 protected:
     void readCommon(MojoReaderBackend &be) {
         parseModelInfo(be);
+        _nfeatures = safeGetIntProperty("n_features");
+        _nclasses = safeGetIntProperty("n_classes");
     }
 
     int safeGetIntProperty(const std::string &name) {
@@ -203,6 +203,12 @@ protected:
 public:
     virtual void read(MojoReaderBackend &be) = 0;
     virtual ~MojoModel() {}
+    virtual int nfeatures() {
+        return _nfeatures;
+    }
+    virtual int nclasses() {
+        return _nclasses;
+    }
 };
 
 }
