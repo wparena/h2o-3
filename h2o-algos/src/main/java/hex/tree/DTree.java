@@ -140,12 +140,12 @@ public class DTree extends Iced {
     public Split(int col, int bin, DHistogram.NASplitDir nasplit, IcedBitSet bs, byte equal, double se, double se0, double se1, double n0, double n1, double p0, double p1 ) {
       assert(nasplit!= DHistogram.NASplitDir.None);
       assert(equal!=1); //no longer done
+      assert se > se0+se1 || se==Double.MAX_VALUE; // No point in splitting unless error goes down
+      assert(col>=0);
+      assert(bin>=0);
       _col = col;  _bin = bin; _nasplit = nasplit; _bs = bs;  _equal = equal;  _se = se;
       _n0 = n0;  _n1 = n1;  _se0 = se0;  _se1 = se1;
       _p0 = p0;  _p1 = p1;
-      assert se > se0+se1 || se==Double.MAX_VALUE; // No point in splitting unless error goes down
-      assert(_col>=0);
-      assert(_bin>=0);
 //      Log.info(this);
     }
     public final double pre_split_se() { return _se; }
@@ -490,6 +490,40 @@ public class DTree extends Iced {
       final int _nid;
       @Override public void compute() {
         _s = findBestSplitPoint(_hs[_col], _col, _tree._parms._min_rows);
+        if (_s == null) return;
+
+        //size of the observations in this node (sum of both my children splits)
+        double sum;
+        if (SharedTree.DEV_DEBUG) {
+          // slower - only do in debug mode
+          sum = 0;
+          for (int i = 0; i < _hs[_col]._nbin; ++i)
+            sum += _hs[_col].w(i);
+          sum+=_hs[_col].wNA();
+        } else {
+          sum = _s._n0+_s._n1;
+        }
+
+        // fast sanity check
+        if (_pid > 0 /* skip root */ ) {
+          boolean sanity = (Math.abs(sum - (_s._n0 + _s._n1)) < 1e-5*sum);
+          assert sanity : "\nInconsistent split: This node " + _nid + " has a total of " + sum
+                  + " observations, but my splits have " + _s._n0 + " + " + _s._n1 + " = " + (_s._n0 + _s._n1) + " observations.";
+          Split parSplit = _tree.decided(_pid)._split;
+          if (parSplit !=null && false) {
+            boolean ok = ((Math.abs(sum - parSplit._n0) < 1e-5*sum)             // I am the left child of the parent node
+                    || (Math.abs(sum - parSplit._n1) < 1e-5*sum)                // I am the right child of the parent node
+                    || (Math.abs(sum - parSplit._n0 - parSplit._n1) < 1e-5*sum) // I am the only child of the parent node (other child was removed)
+            );
+            assert ok :
+                    "\nInvalid split: Parent node with " + (parSplit._n0 + parSplit._n1) + " observations got split into two child nodes with "
+                            + parSplit._n0 + " and " + parSplit._n1 + " observations each but this node isn't either of them, but has " + sum + " observations."
+                            + "\nParent node " + _pid + " split:\n" + parSplit.toString()
+                            + "\nThis node " + _nid + " split:\n" + _s.toString()
+                            + "\nParent node:" + _tree.decided(_pid).toString()
+                            + "\nHisto: " + _hs[_col].toString();
+          }
+        }
       }
     }
 
@@ -667,6 +701,7 @@ public class DTree extends Iced {
         else if(_split._equal == 2) _split._bs.compress2(ab);
         else _split._bs.compress3(ab);
       }
+//      Log.info("Putting n0/n1: " + _split._n0 + "/" + _split._n1);
       ab.put4f((float)(_split._n0));
       ab.put4f((float)(_split._n1));
 
@@ -752,6 +787,7 @@ public class DTree extends Iced {
         vals[3*i+0] = hs._vals[3*id+0];
         vals[3*i+1] = hs._vals[3*id+1];
         vals[3*i+2] = hs._vals[3*id+2];
+//        Log.info(vals[3*i] + " obs have avg response [" + i + "]=" + avgs[id]);
       }
     }
 
@@ -897,14 +933,10 @@ public class DTree extends Iced {
     // prediction then found the optimal split on sorted bins
     IcedBitSet bs = null;       // In case we need an arbitrary bitset
     if( idxs != null ) {        // We sorted bins; need to build a bitset
-      int min=Integer.MAX_VALUE;// Compute lower bound and span for bitset
-      int max=Integer.MIN_VALUE;
-      for( int i=best; i<nbins; i++ ) {
-        min=Math.min(min,idxs[i]);
-        max=Math.max(max,idxs[i]);
-      }
-      bs = new IcedBitSet(max-min+1,min); // Bitset with just enough span to cover the interesting bits
-      for( int i=best; i<nbins; i++ ) bs.set(idxs[i]); // Reverse the index then set bits
+      bs = new IcedBitSet((int)hs._maxEx-(int)hs._min, (int)hs._min);
+      for( int i=best; i<nbins; i++ )
+        bs.set(idxs[i] + (int)hs._min);
+
       if (bs.cardinality()==0 || bs.cardinality()==bs.size()) {
 //        Log.info("Not splitting: no separation of categoricals possible");
         return null;
@@ -943,6 +975,7 @@ public class DTree extends Iced {
       nRight +=wNA;
       predRight +=wYNA;
     }
+    assert(Math.abs(tot - (nRight + nLeft)) < 1e-5*tot);
 
     if( MathUtils.equalsWithinOneSmallUlp((float)(predLeft / nLeft),(float)(predRight / nRight)) ) {
 //      Log.info("Not splitting: Predictions for left/right are the same:\n" + this);

@@ -11,6 +11,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import water.*;
+import water.api.StreamingSchema;
 import water.exceptions.H2OModelBuilderIllegalArgumentException;
 import water.fvec.Frame;
 import water.fvec.RebalanceDataSet;
@@ -21,6 +22,7 @@ import water.util.Triple;
 import water.util.VecUtils;
 
 import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.util.*;
 
@@ -420,6 +422,9 @@ public class DRFTest extends TestUtil {
       DRF job = new DRF(drf);
       // Get the model
       model = job.trainModel().get();
+      StreamingSchema ss = new StreamingSchema(model.getMojo(), "model.zip");
+      FileOutputStream fos = new FileOutputStream("model.zip");
+      ss.getStreamWriter().writeTo(fos);
       Log.info(model._output);
       Assert.assertTrue(job.isStopped()); //HEX-1817
 
@@ -741,7 +746,7 @@ public class DRFTest extends TestUtil {
       Log.info("trial: " + i + " -> MSE: " + mses[i]);
     }
     for (int i=0; i<mses.length; ++i) {
-      assertEquals(0.21270754031847988, mses[i], 1e-4); //check for the same result on 1 nodes and 5 nodes
+      assertEquals(0.20355483036909783, mses[i], 1e-4); //check for the same result on 1 nodes and 5 nodes
     }
   }
 

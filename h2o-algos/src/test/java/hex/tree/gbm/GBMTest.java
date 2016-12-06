@@ -8,6 +8,8 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import water.*;
+import water.api.StreamingSchema;
+import water.api.schemas4.OutputSchemaV4;
 import water.exceptions.H2OModelBuilderIllegalArgumentException;
 import water.fvec.Chunk;
 import water.fvec.Frame;
@@ -16,6 +18,8 @@ import water.fvec.Vec;
 import water.parser.ParseDataset;
 import water.util.*;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -629,7 +633,7 @@ public class GBMTest extends TestUtil {
     System.out.println("MSEs End");
     System.out.flush();
     for( double mse : mses )
-      assertEquals(0.21919646108299456, mse, 1e-8); //check for the same result on 1 nodes and 5 nodes (will only work with enough chunks), mse, 1e-8); //check for the same result on 1 nodes and 5 nodes (will only work with enough chunks)
+      assertEquals(0.21693525517287557, mse, 1e-8); //check for the same result on 1 nodes and 5 nodes (will only work with enough chunks), mse, 1e-8); //check for the same result on 1 nodes and 5 nodes (will only work with enough chunks)
   }
 
   @Test public void testReprodubilityAirlineSingleNode() {
@@ -689,7 +693,7 @@ public class GBMTest extends TestUtil {
     for(double d:mses)
       System.out.println(d);
     for( double mse : mses )
-      assertEquals(0.21919646108299456, mse, 1e-8); //check for the same result on 1 nodes and 5 nodes (will only work with enough chunks)
+      assertEquals(0.21693525517287557, mse, 1e-8); //check for the same result on 1 nodes and 5 nodes (will only work with enough chunks)
   }
 
   // HEXDEV-223
@@ -1415,9 +1419,9 @@ public class GBMTest extends TestUtil {
       gbm = new GBM(parms).trainModel().get();
 
       ModelMetricsBinomial mm = (ModelMetricsBinomial)gbm._output._cross_validation_metrics;
-      assertEquals(0.7262032347274434, mm.auc_obj()._auc, 1e-4); // 1 node
-      assertEquals(0.22663824626352638, mm.mse(), 1e-4);
-      assertEquals(0.6458390321700332, mm.logloss(), 1e-4);
+      assertEquals(0.730441773442826, mm.auc_obj()._auc, 1e-4); // 1 node
+      assertEquals(0.22517611872723386, mm.mse(), 1e-4);
+      assertEquals(0.6426779746269872, mm.logloss(), 1e-4);
 
     } finally {
       if (tfr != null) tfr.remove();
@@ -2761,6 +2765,81 @@ public class GBMTest extends TestUtil {
         if (gbm != null) gbm.deleteCrossValidationModels();
         if (gbm != null) gbm.delete();
       }
+    }
+  }
+
+  // A test of the validity of categorical splits
+  @Test public void testCategoricalSplits() throws FileNotFoundException {
+    Frame fr=null;
+    GBMModel model = null;
+    Scope.enter();
+    try {
+      GBMModel.GBMParameters parms = new GBMModel.GBMParameters();
+      fr = parse_test_file("smalldata/gbm_test/ecology_model.csv");
+      fr.remove("Site").remove();
+      fr.remove("SegSumT").remove();
+      fr.remove("SegTSeas").remove();
+      fr.remove("SegLowFlow").remove();
+      fr.remove("DSDist").remove();
+      fr.remove("DSMaxSlope").remove();
+      fr.remove("USAvgT").remove();
+      fr.remove("USRainDays").remove();
+      fr.remove("USSlope").remove();
+//      fr.remove("USNative").remove();
+      fr.remove("DSDam").remove();
+//      fr.remove("LocSed").remove();
+
+      fr.remove("Method").remove();
+      int ci = fr.find("Angaus");
+      Scope.track(fr.replace(ci, fr.vecs()[ci].toCategoricalVec()));   // Convert response 'Angaus' to categorical
+      DKV.put(fr);
+      parms._train = fr._key;
+      parms._response_column = "Angaus";
+      parms._ntrees = 1;
+      parms._min_rows = 10;
+      parms._max_depth = 13;
+      parms._distribution = DistributionFamily.multinomial;
+      model = new GBM(parms).trainModel().get();
+
+//      StreamingSchema ss = new StreamingSchema(model.getMojo(), "model.zip");
+//      FileOutputStream fos = new FileOutputStream("model.zip");
+//      ss.getStreamWriter().writeTo(fos);
+    } finally {
+      if( model != null ) model.delete();
+      if( fr  != null )   fr.remove();
+      Scope.exit();
+    }
+  }
+
+  // A test of the validity of categorical splits
+  @Test public void testCategoricalSplits2() throws FileNotFoundException {
+    Frame fr=null;
+    GBMModel model = null;
+    Scope.enter();
+    try {
+      GBMModel.GBMParameters parms = new GBMModel.GBMParameters();
+      fr = parse_test_file("smalldata/airlines/allyears2k_headers.zip");
+
+      Frame fr2 = new Frame(Key.<Frame>make(), new String[]{"C","R"}, new Vec[]{fr.vec("Origin"),fr.vec("IsDepDelayed")});
+      int ci = fr2.find("R");
+      Scope.track(fr2.replace(ci, fr2.vecs()[ci].toCategoricalVec()));   // Convert response 'Angaus' to categorical
+      DKV.put(fr2);
+      parms._train = fr2._key;
+      parms._response_column = "R";
+      parms._ntrees = 1;
+      parms._min_rows = 1000;
+      parms._max_depth = 4;
+      parms._distribution = DistributionFamily.bernoulli;
+      model = new GBM(parms).trainModel().get();
+      DKV.remove(fr2._key);
+
+//      StreamingSchema ss = new StreamingSchema(model.getMojo(), "model.zip");
+//      FileOutputStream fos = new FileOutputStream("model.zip");
+//      ss.getStreamWriter().writeTo(fos);
+    } finally {
+      if( model != null ) model.delete();
+      if( fr  != null )   fr.remove();
+      Scope.exit();
     }
   }
 
