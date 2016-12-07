@@ -392,6 +392,7 @@ public class GLRMModel extends Model<GLRMModel, GLRMModel.GLRMParameters, GLRMMo
 
     GLRMScore gs = new GLRMScore(ncols, _parms._k, false).doAll(fullFrm);
     ModelMetrics mm = gs._mb.makeModelMetrics(GLRMModel.this, adaptedFr, null, null);   // save error metrics based on imputed data
+    mm._frame_checksum = frame.checksum();      // get the checksum of the original frame and not the one changed
     return (ModelMetricsGLRM) mm;
   }
 
