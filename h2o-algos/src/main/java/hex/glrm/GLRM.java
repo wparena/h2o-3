@@ -61,6 +61,8 @@ public class GLRM extends ModelBuilder<GLRMModel, GLRMModel.GLRMParameters, GLRM
   // Loss function for each column
   private transient GlrmLoss[] _lossFunc;
 
+  private String[] _originalColumnNames;  // store column names before any change to it.
+
   @Override protected GLRMDriver trainModelImpl() { return new GLRMDriver(); }
   @Override public ModelCategory[] can_build() { return new ModelCategory[]{ModelCategory.Clustering}; }
 
@@ -103,6 +105,7 @@ public class GLRM extends ModelBuilder<GLRMModel, GLRMModel.GLRMParameters, GLRM
     _ncolX = _parms._k;
     _ncolA = _train == null? -1 : _train.numCols();
     _ncolY = _train == null? -1 : LinearAlgebraUtils.numColsExp(_train, true);
+    _originalColumnNames = _parms.train().names();
 
     initLoss();
 
@@ -221,23 +224,17 @@ public class GLRM extends ModelBuilder<GLRMModel, GLRMModel.GLRMParameters, GLRM
 
     // If _loss_by_col is provided, then override loss functions on the specified columns
     if (num_loss_by_cols > 0) {
-      if (num_loss_by_cols_idx == 0) {
-        if (num_loss_by_cols == _ncolA)
-          _lossFunc = _parms._loss_by_col;
+      ArrayList<String> newColumnNames = new ArrayList<String>(Arrays.asList(_train.names()));
+      if (num_loss_by_cols_idx == 0) {  // constant columns may be dropped here.  Need to take care of this
+        if (num_loss_by_cols == _parms.train().numCols())
+          assignLossByCol(num_loss_by_cols, newColumnNames);
         else
-          error("_loss_by_col", "Number of override loss functions should be the same as the number of columns in " +
-                                "the input frame; or otherwise an explicit _loss_by_col_idx should be provided.");
+          error("_loss_by_col", "Number of override loss functions should be the same as the " +
+                  "number of columns in the input frame; or otherwise an explicit _loss_by_col_idx should be " +
+                  "provided.");
       }
-      if (num_loss_by_cols_idx == num_loss_by_cols) {
-        for (int i = 0; i < num_loss_by_cols; i++) {
-          int cidx = _parms._loss_by_col_idx[i];
-          if (cidx < 0 || cidx >= _ncolA)
-            error("_loss_by_col_idx", "Column index " + cidx + " must be in [0," + _ncolA + ")");
-          else
-            _lossFunc[cidx] = _parms._loss_by_col[i];
-        }
-      }
-      // Otherwise we have already reported an error at the start of this method
+      if (num_loss_by_cols_idx == num_loss_by_cols)
+        assignLossByCol(num_loss_by_cols, newColumnNames);
     }
 
     // Check that all loss functions correspond to their actual type
@@ -263,6 +260,22 @@ public class GLRM extends ModelBuilder<GLRMModel, GLRMModel.GLRMParameters, GLRM
     }
   }
 
+  /*
+    Need to assign column loss for each column.  However, due to constant columns being dropping, the
+    loss function specified for a constant columns will no longer apply since we dropped that column.
+    Need to take care of this case to avoid errors.
+   */
+  private void assignLossByCol(int num_loss_by_cols, ArrayList<String> newColumnNames) {
+    for (int i = 0; i < num_loss_by_cols; i++) {
+      int cidx = _parms._loss_by_col_idx[i];
+      String colNames = _originalColumnNames[cidx];
+      if (cidx < 0 || cidx >= _originalColumnNames.length)
+        error("_loss_by_col_idx", "Column index " + cidx + " must be in [0," + _ncolA + ")");
+      else
+        if (newColumnNames.contains(colNames))
+          _lossFunc[newColumnNames.indexOf(colNames)] = _parms._loss_by_col[i];
+    }
+  }
 
   // Squared Frobenius norm of a matrix (sum of squared entries)
   public static double frobenius2(double[][] x) {
