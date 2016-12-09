@@ -64,7 +64,7 @@ private:
 //    bool _supervised;
     int _nfeatures;
     int _nclasses;
-//    bool _balanceClasses;
+    bool _balanceClasses;
 //    double _defaultThreshold;
 //    std::vector<double> _priorClassDistrib;
 //    std::vector<double> _modelClassDistrib;
@@ -179,6 +179,19 @@ protected:
         parseModelInfo(be);
         _nfeatures = safeGetIntProperty("n_features");
         _nclasses = safeGetIntProperty("n_classes");
+        _balanceClasses = safeGetBoolProperty("balance_classes");
+    }
+
+    bool safeGetBoolProperty(const std::string &name) {
+        safeCheckPropertyExists(name);
+        std::string stringValue = _info.properties[name];
+        if (stringValue == "true") {
+            return true;
+        }
+        else if (stringValue == "false") {
+            return false;
+        }
+        throw std::invalid_argument("Boolean property is not true or false: " + name + " (" + stringValue + ")");
     }
 
     int safeGetIntProperty(const std::string &name) {
@@ -208,6 +221,9 @@ public:
     }
     virtual int nclasses() {
         return _nclasses;
+    }
+    virtual bool balanceClasses() {
+        return _balanceClasses;
     }
 };
 

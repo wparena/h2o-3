@@ -37,12 +37,35 @@ public:
         _init_f = safeGetDoubleProperty("init_f");
     }
 
-//    virtual void score0(std::vector<double> &row, std::vector<double> &preds) {
-//        assert(0);
-//    }
-
-    virtual void score0(double *row, double *preds) {
+    double *score0(double *row, double offset, double *preds) {
+        scoreAllTrees(row, preds);
+        if (_family->family() == bernoulli || _family->family() == modified_huber) {
+            double f = preds[1] + _init_f + offset;
+            preds[2] = _family->linkInv(f);
+            preds[1] = 1.0 - preds[2];
+        } else if (_family->family() == multinomial) {
+            if (nclasses() == 2) { // 1-tree optimization for binomial
+                preds[1] += _init_f + offset; //offset is not yet allowed, but added here to be future-proof
+                preds[2] = -preds[1];
+            }
+            assert(0);
+            // GenModel.GBM_rescale(preds);
+        } else { // Regression
+            double f = preds[0] + _init_f + offset;
+            preds[0] = _family->linkInv(f);
+            return preds;
+        }
+        if (balanceClasses()) {
+            assert(0);
+            // GenModel.correctProbabilities(preds, _priorClassDistrib, _modelClassDistrib);
+        }
         assert(0);
+        // preds[0] = GenModel.getPrediction(preds, _priorClassDistrib, row, _defaultThreshold);
+        return preds;
+    }
+
+    virtual double *score0(double *row, double *preds) {
+        return score0(row, 0.0, preds);
     }
 };
 

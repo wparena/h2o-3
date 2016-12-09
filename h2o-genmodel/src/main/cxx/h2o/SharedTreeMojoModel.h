@@ -34,6 +34,10 @@ protected:
         }
     }
 
+    void scoreAllTrees(double *row, double *preds) {
+        assert(0);
+    }
+
 public:
     virtual ~SharedTreeMojoModel() {}
 };

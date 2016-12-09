@@ -24,7 +24,7 @@ public:
 
     virtual int nfeatures() = 0;
     virtual int nclasses() = 0;
-    virtual void score0(double *row, double *preds) = 0;
+    virtual double *score0(double *row, double *preds) = 0;
 };
 
 }
