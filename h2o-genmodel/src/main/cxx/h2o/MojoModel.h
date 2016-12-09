@@ -4,6 +4,7 @@
 #include "h2o/util.h"
 #include "h2o/GenModel.h"
 #include "h2o/MojoReaderBackend.h"
+#include "h2o/ModelCategory.h"
 
 #include <string>
 #include <vector>
@@ -11,19 +12,6 @@
 #include <cassert>
 
 namespace h2o {
-
-/**
- * Must stay in sync with Java version of ModelCategory!
- */
-enum ModelCategory {
-    Unknown      = 0,
-    Binomial     = 1,
-    Multinomial  = 2,
-    Regression   = 3,
-    Clustering   = 4,
-    AutoEncoder  = 5,
-    DimReduction = 6
-};
 
 class DomainInfo {
 public:
@@ -59,7 +47,7 @@ class MojoModel : public GenModel {
 private:
     MojoModelInfo _info;
 
-//    ModelCategory _category;
+    ModelCategory _category;
 //    std::string _uuid;
 //    bool _supervised;
     int _nfeatures;
@@ -168,7 +156,7 @@ private:
         }
     }
 
-    void safeCheckPropertyExists(const std::string &name) {
+    void safeCheckPropertyExists(const std::string &name) const {
         if (! mapContains(_info.properties, name)) {
             throw std::invalid_argument("Property does not exist: " + name);
         }
@@ -215,15 +203,42 @@ protected:
 
 public:
     virtual void read(MojoReaderBackend &be) = 0;
+
     virtual ~MojoModel() {}
-    virtual int nfeatures() {
+
+    virtual int nfeatures() const {
         return _nfeatures;
     }
-    virtual int nclasses() {
+
+    virtual int nclasses() const {
         return _nclasses;
     }
-    virtual bool balanceClasses() {
+
+    virtual bool balanceClasses() const {
         return _balanceClasses;
+    }
+
+    virtual bool isClassifier() const {
+        return (_category.category() == ModelCategory::Binomial) ||
+               (_category.category() == ModelCategory::Multinomial);
+    }
+
+    virtual bool isAutoEncoder() const {
+        return false;
+    }
+
+    virtual int getPredsSize() const {
+        switch (_category.category()) {
+            case ModelCategory::DimReduction:
+                return nclasses();
+            case ModelCategory::AutoEncoder:
+                return nfeatures();
+            case ModelCategory::Binomial:
+            case ModelCategory::Multinomial:
+                return nclasses() + 1;
+            default:
+                return 2;
+        }
     }
 };
 

@@ -37,13 +37,13 @@ public:
         _init_f = safeGetDoubleProperty("init_f");
     }
 
-    double *score0(double *row, double offset, double *preds) {
+    std::vector<double> &score0(const std::vector<double> &row, double offset, std::vector<double> &preds) const {
         scoreAllTrees(row, preds);
-        if (_family->family() == bernoulli || _family->family() == modified_huber) {
+        if (_family->family() == DistributionFamily::bernoulli || _family->family() == DistributionFamily::modified_huber) {
             double f = preds[1] + _init_f + offset;
             preds[2] = _family->linkInv(f);
             preds[1] = 1.0 - preds[2];
-        } else if (_family->family() == multinomial) {
+        } else if (_family->family() == DistributionFamily::multinomial) {
             if (nclasses() == 2) { // 1-tree optimization for binomial
                 preds[1] += _init_f + offset; //offset is not yet allowed, but added here to be future-proof
                 preds[2] = -preds[1];
@@ -64,7 +64,7 @@ public:
         return preds;
     }
 
-    virtual double *score0(double *row, double *preds) {
+    virtual std::vector<double> &score0(const std::vector<double> &row, std::vector<double> &preds) const {
         return score0(row, 0.0, preds);
     }
 };

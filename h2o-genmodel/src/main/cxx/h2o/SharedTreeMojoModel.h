@@ -34,7 +34,7 @@ protected:
         }
     }
 
-    void scoreAllTrees(double *row, double *preds) {
+    void scoreAllTrees(const std::vector<double> &row, std::vector<double> &preds) const {
         assert(0);
     }
 

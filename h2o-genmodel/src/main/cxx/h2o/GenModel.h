@@ -22,9 +22,12 @@ public:
 
     virtual ~GenModel() {}
 
-    virtual int nfeatures() = 0;
-    virtual int nclasses() = 0;
-    virtual double *score0(double *row, double *preds) = 0;
+    virtual int nfeatures() const = 0;
+    virtual int nclasses() const = 0;
+    virtual bool isClassifier() const = 0;
+    virtual bool isAutoEncoder() const = 0;
+    virtual int getPredsSize() const = 0;
+    virtual std::vector<double> &score0(const std::vector<double> &row, std::vector<double> &preds) const = 0;
 };
 
 }

@@ -11,8 +11,8 @@ int main(int argc, char **argv) {
     row2[3] = 0;
     row2[4] = 6;
     std::vector<double> pred2;
-    pred2.resize(rawModel->nclasses()+1);
-    rawModel->score0(row2.data(), pred2.data());
+    pred2.resize(rawModel->getPredsSize());
+    rawModel->score0(row2, pred2);
 
     h2o::EasyPredictModelWrapper model(rawModel);
 

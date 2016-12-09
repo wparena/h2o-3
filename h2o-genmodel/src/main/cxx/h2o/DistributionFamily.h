@@ -5,22 +5,22 @@
 
 namespace h2o {
 
-enum DistributionFamilyType {
-    unknown = 0,
-    bernoulli = 1,
-    modified_huber = 2,
-    multinomial = 3,
-    gaussian = 4,
-    poisson = 5,
-    gamma = 6,
-    tweedie = 7,
-    huber = 8,
-    laplace = 9,
-    quantile = 10
-};
-
 class DistributionFamily {
 public:
+    enum DistributionFamilyType {
+        unknown = 0,
+        bernoulli = 1,
+        modified_huber = 2,
+        multinomial = 3,
+        gaussian = 4,
+        poisson = 5,
+        gamma = 6,
+        tweedie = 7,
+        huber = 8,
+        laplace = 9,
+        quantile = 10
+    };
+
     virtual ~DistributionFamily() {}
 
     static DistributionFamily *valueOf(const std::string &name);
