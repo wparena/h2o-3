@@ -304,49 +304,29 @@ h2o.download_mojo <- function(model, path=getwd(), get_genmodel_jar=FALSE) {
     stop("The 'get_genmodel_jar' variable should be of type logical/boolean")
   }
 
-  if(!(model@algorithm %in% c("drf","gbm","deepwater","glrm","glm"))){
-    stop("MOJOs are currently supported for Distributed Random Forest, Gradient Boosting Method, Deep Water, GLM and GLRM models only.")
+  if(!(model@algorithm %in% c("drf","gbm","deepwater","glrm"))){
+    stop("MOJOs are currently supported for Distributed Random Forest, Gradient Boosting Method, Deep Water and GLRM models only.")
   }
 
   if(!(file.exists(path))){
     stop(paste0("'path',",path,", to save MOJO file cannot be found."))
   }
-
-  #Get model_id
   model_id <- model@model_id
 
-  #Get header of HTTP response from MOJO URL
-  h = basicTextGatherer()
-  urlMojo <- .h2o.calcBaseURL(h2oRestApiVersion = .h2o.__REST_API_VERSION, urlSuffix = paste0(.h2o.__MODELS,"/",model_id,"/mojo"))
-  content = getBinaryURL(urlMojo, .opts = list(headerfunction = h$update))
-  header = parseHTTPHeader(h$value())
-  httpStatus = header["status"]
+  urlSuffix <- paste0(.h2o.__MODELS,"/",
+  URLencode(model_id),
+  "/mojo")
+  print(urlSuffix)
+  tmp <- .h2o.doSafeGET(urlSuffix = urlSuffix,binary=TRUE)
 
-  #Check if response for MOJO is OK
-  if(httpStatus != 200){
-    stop(paste0("Encountered error getting MOJO from H2O server. Status: ",httpStatus, " -> ",header["statusMessage"]))
-  }else{
-    tmp <- getBinaryURL(url = urlMojo,useragent = R.version.string)
-    mojo.path <- paste0(path,"/",model_id,".zip")
-    writeBin(tmp, mojo.path, useBytes = TRUE)
+  mojo.path <- paste0(path,"/",model_id,".zip")
+  writeBin(tmp, mojo.path, useBytes = TRUE)
+
+  if (get_genmodel_jar) {
+    urlSuffix = "h2o-genmodel.jar"
+    tmp <- .h2o.doSafeGET(urlSuffix = urlSuffix)
+    jar.path <- paste0(path, "/h2o-genmodel.jar")
+    writeBin(tmp, jar.path, useBytes = TRUE)
   }
-
-  #If get_genmodel_jar = TRUE get header of HTTP response from genmodel URL
-  if(get_genmodel_jar){
-    g = basicTextGatherer()
-    urlGenModel <- .h2o.calcBaseURL(h2oRestApiVersion = .h2o.__REST_API_VERSION, urlSuffix = "h2o-genmodel.jar")
-    contentGenModel = getBinaryURL(urlGenModel, .opts = list(headerfunction = g$update))
-    headerGenModel = parseHTTPHeader(g$value())
-    httpStatusGenModel = header["status"]
-    #Check if response for GenModel is OK
-    if(httpStatusGenModel != 200){
-      stop(paste0("Encountered error getting genmodel.jar from H2O server. Status: ",httpStatus, " -> ",header["statusMessage"]))
-    }else{
-      tmp <- getBinaryURL(url = urlGenModel,useragent = R.version.string)
-      jar.path <- paste0(path, "/h2o-genmodel.jar")
-      writeBin(tmp, jar.path, useBytes = TRUE)
-    }
-  }
-
   return(paste0(model_id,".zip"))
 }

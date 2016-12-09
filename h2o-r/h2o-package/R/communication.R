@@ -40,10 +40,11 @@
     sprintf("%s://%s:%s/%s/%s", scheme, conn@ip, as.character(conn@port), h2oRestApiVersion, urlSuffix)
 }
 
-.h2o.doRawREST <- function(conn, h2oRestApiVersion, urlSuffix, parms, method, fileUploadInfo, ...) {
+.h2o.doRawREST <- function(conn, h2oRestApiVersion, urlSuffix, parms, method, fileUploadInfo, binary = FALSE, ...) {
   timeout_secs <- 0
   stopifnot(is(conn, "H2OConnection"))
   stopifnot(is.character(urlSuffix))
+  stopifnot(is.logical(binary))
   if (missing(parms))
     parms = list()
   else {
@@ -136,7 +137,11 @@
 
   if ((method == "GET") || (method == "DELETE")) {
     h <- basicHeaderGatherer()
-    t <- basicTextGatherer(.mapUnicode = FALSE)
+    if(binary){
+      t <- multiTextGatherer(uris = urlSuffix)
+    }else{
+      t <- basicTextGatherer(.mapUnicode = FALSE)
+    }
     tmp <- tryCatch(curlPerform(url = url,
                                 customrequest = method,
                                 writefunction = t$update,
